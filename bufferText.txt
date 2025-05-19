@@ -1,0 +1,69 @@
+
+
+Quero que as novas colunas sejam chamadas:
+Age, Height, Weight, Past_medical_history,Duration, Surgery,Pelvic_strength, Abdominal_muscle_strength, Pelvic_floor_endurance, Abdominal_muscle_endurance, How_often_leak_urine, Urine_usually_leak, Interefere_daily_life, ICIQ_SF_total, When_urine_leak, week
+
+
+
+Categóricas:
+Past_medical_history, Surgery, How_often_leak_urine, Urine_usually_leak, Interfere_daily_life, When_urine_leak, week
+
+Numéricas:
+Age, Height, Weight, Duration, Pelvic_strength, Abdominal_muscle_strength, Pelvic_floor_endurance, Abdominal_muscle_endurance, ICIQ_SF_total
+
+
+Quais as necessidades da Dona Benedita?
+
+- Ter alívio da incontinência para melhorar vida social
+- Ter mais vontade de sair de casa
+- Conseguir motivação para seguir vida saudável (atividades, dieta, insulina)
+- Conseguir lembrar de medir a glicose
+- Perder o hábito de pular refeições
+
+Quais necessidades podemos resolver?
+- Ter alívio da incontinência para melhorar vida social
+- Ter mais vontade de sair de casa
+
+As pessoas tendem a ter menos vontade e motivação de fazer algo se quando fazem têm experiêncis ruins
+
+Precisamos mostrar que 
+- Sair de casa é bom
+- As pessoas são legais
+- Você está melhorando a incontinência dia após dia 
+- É possível e rápido melhorar
+
+Planejamento das ideias:
+Listar varias ideias, não descartar nenhuma
+- São de mesma categoria ou de categorias diferentes?
+- Acrescentar detalhes
+- Buscar ideias originais
+
+ideias:
+PISS BUDDY
+
+ao cadastrar, usuário registra alguns dados:
+Age, Height, Weight, Past_medical_history, Duration, Surgery
+responde questionário ICIQ_SF das últimas 4 SEMANAS
+costuma beber café? álcool? refrigerante? 
+costuma segurar xixi? costuma beber água de quanto em quanto tempo?
+
+
+aí, recebe recomendações e rotina recomendada:
+xixi a cada 2 horas,
+Reduzir o consumo de cafeína e álcool (estimulam a bexiga e aumentam a produção de urina),
+Evitar bebidas gaseificadas e cítricas (podem irritar a bexiga),
+Se IMC está alto: Manter um peso saudável — o excesso de peso aumenta a pressão sobre a bexiga,
+Evitar segurar o xixi por muito tempo 
+
+recebe lista de exercícios para a primeira semana
+
+cada dia, usuário marca se fez os exercícios e seguiu as recomendações, anota as micções e episódios de escapes diários
+
+e toda semana responde ao questionário novamente
+
+
+o app mostra histórico, evolução e ICIQ, How_often_leak_urine,Urine_usually_leak,Interefere_daily_life,When_urine_leak prováveis para a semana seguinte
+
+
+
+
