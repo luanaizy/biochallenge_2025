@@ -6,10 +6,10 @@ Age, Height, Weight, Past_medical_history,Duration, Surgery,Pelvic_strength, Abd
 
 
 Categóricas:
-Past_medical_history, Surgery, How_often_leak_urine, Urine_usually_leak, Interfere_daily_life, When_urine_leak, week
+Past_medical_history, Surgery, How_often_leak_urine, Urine_usually_leak, Interfere_daily_life, When_urine_leak
 
 Numéricas:
-Age, Height, Weight, Duration, Pelvic_strength, Abdominal_muscle_strength, Pelvic_floor_endurance, Abdominal_muscle_endurance, ICIQ_SF_total
+Age, Height, Weight, Duration, Pelvic_strength, Abdominal_muscle_strength, Pelvic_floor_endurance, Abdominal_muscle_endurance, ICIQ_SF_total, week
 
 
 Quais as necessidades da Dona Benedita?
