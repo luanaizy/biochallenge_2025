@@ -16,6 +16,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
 import ExerciseInstructionsModal from '../components/ExerciseInstructionsModal';
 import { exerciseData } from '../data/exerciseData';
+import { exercisePlanService } from '../services/exercisePlanService';
 
 // Define styles first so they can be used by icon components
 const styles = StyleSheet.create({
@@ -236,6 +237,34 @@ const styles = StyleSheet.create({
     color: '#999',
     fontStyle: 'italic',
   },
+  loadingText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
+    fontStyle: 'italic',
+    marginVertical: 20,
+  },
+  noExercisesContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  noExercisesText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  generatePlanButton: {
+    backgroundColor: '#8B9A8B',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  generatePlanButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+  },
 });
 
 // Move icon components outside to prevent re-creation on every render
@@ -284,6 +313,10 @@ export default function HomeScreen() {
   const [exerciseSessions, setExerciseSessions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedExercise, setSelectedExercise] = useState(null);
+  const [exercisePlan, setExercisePlan] = useState(null);
+  const [todaysExercises, setTodaysExercises] = useState([]);
+  const [selectedDateExercises, setSelectedDateExercises] = useState([]);
+  const [isLoadingPlan, setIsLoadingPlan] = useState(true);
   const { user } = useAuthContext();
   
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
@@ -317,10 +350,32 @@ export default function HomeScreen() {
   const today = new Date().getDate();
   const [selectedDate, setSelectedDate] = useState(today);
 
+  // Function to get day of week for selected date
+  const getSelectedDayOfWeek = () => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
+    const selectedDateObj = new Date(currentYear, currentMonth, selectedDate);
+    return selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  };
+
+  // Function to update exercises for selected date
+  const updateSelectedDateExercises = () => {
+    if (exercisePlan) {
+      const dayOfWeek = getSelectedDayOfWeek();
+      const exercisesForDate = exercisePlanService.getExercisesForDay(exercisePlan, dayOfWeek);
+      setSelectedDateExercises(exercisesForDate);
+    }
+  };
+
+  useEffect(() => {
+    updateSelectedDateExercises();
+  }, [selectedDate, exercisePlan]);
+
   useEffect(() => {
     if (user) {
       fetchUserProfile();
       fetchExerciseSessions();
+      fetchExercisePlan();
     }
   }, [user, selectedDate]);
 
@@ -380,7 +435,34 @@ export default function HomeScreen() {
     }
   };
 
-  const handleExerciseComplete = async (exerciseType, repetitions) => {
+  const fetchExercisePlan = async () => {
+    try {
+      setIsLoadingPlan(true);
+      
+      // Test database connection first
+      const testResult = await exercisePlanService.testConnection();
+      console.log('Database connection test:', testResult);
+      
+      const plan = await exercisePlanService.getOrCreateCurrentWeekPlan(user.id);
+      setExercisePlan(plan);
+      
+      // Get today's exercises
+      const todayExercises = exercisePlanService.getTodaysExercises(plan);
+      setTodaysExercises(todayExercises);
+      
+      // Get exercises for the currently selected date
+      const dayOfWeek = getSelectedDayOfWeek();
+      const exercisesForDate = exercisePlanService.getExercisesForDay(plan, dayOfWeek);
+      setSelectedDateExercises(exercisesForDate);
+    } catch (error) {
+      console.error('Error fetching exercise plan:', error);
+      Alert.alert('Erro', `Não foi possível carregar seu plano de exercícios: ${error.message}`);
+    } finally {
+      setIsLoadingPlan(false);
+    }
+  };
+
+  const handleExerciseComplete = async (exerciseType, repetitions, exercisePlanItemId = null) => {
     // Check if the selected date is today
     if (selectedDate !== today) {
       Alert.alert(
@@ -391,32 +473,42 @@ export default function HomeScreen() {
     }
 
     try {
-      // Create date string for today
-      const currentYear = new Date().getFullYear();
-      const currentMonth = new Date().getMonth() + 1;
-      const todayDateString = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${today.toString().padStart(2, '0')}`;
-      
-      const { error } = await supabase
-        .from('exercise_sessions')
-        .insert([
-          {
-            user_id: user.id,
-            exercise_type: exerciseType,
-            repetitions: repetitions,
-            date: todayDateString,
-          }
-        ]);
-
-      if (error) {
-        Alert.alert('Erro', 'Não foi possível salvar o exercício');
-        console.error('Error saving exercise:', error);
+      if (exercisePlanItemId) {
+        // Use the new exercise plan system
+        await exercisePlanService.completeExercise(exercisePlanItemId);
+        
+        // Refresh the exercise plan to update completion status
+        await fetchExercisePlan();
+        
+        Alert.alert('Sucesso!', `Exercício concluído!`);
       } else {
-        Alert.alert('Sucesso!', `Exercício de ${exerciseType} concluído!`);
-        fetchExerciseSessions(); // Refresh the sessions
+        // Fallback to old system for backward compatibility
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+        const todayDateString = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-${today.toString().padStart(2, '0')}`;
+        
+        const { error } = await supabase
+          .from('exercise_sessions')
+          .insert([
+            {
+              user_id: user.id,
+              exercise_type: exerciseType,
+              repetitions: repetitions,
+              date: todayDateString,
+            }
+          ]);
+
+        if (error) {
+          Alert.alert('Erro', 'Não foi possível salvar o exercício');
+          console.error('Error saving exercise:', error);
+        } else {
+          Alert.alert('Sucesso!', `Exercício de ${exerciseType} concluído!`);
+          fetchExerciseSessions(); // Refresh the sessions
+        }
       }
     } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Erro', 'Ocorreu um erro ao salvar o exercício');
+      Alert.alert('Erro', 'Não foi possível salvar o exercício');
+      console.error('Error saving exercise:', error);
     }
   };
 
@@ -432,8 +524,61 @@ export default function HomeScreen() {
     }
   };
 
-  const renderExerciseCard = (title, repetitions, icon, color, bgColor, exerciseType) => {
-    const isCompleted = exerciseSessions.some(session => session.exercise_type === exerciseType);
+  const getExerciseDetails = (exerciseType) => {
+    const exerciseConfig = {
+      'sitting_standing': {
+        name: 'Sentar e Levantar',
+        icon: <SittingIcon />,
+        color: '#8B9A8B',
+        bgColor: '#B8C5B8'
+      },
+      'kegel': {
+        name: 'Exercício de Kegel',
+        icon: <KegelIcon />,
+        color: '#D4A5A5',
+        bgColor: '#E8D4D4'
+      },
+      'alongamento': {
+        name: 'Alongamento',
+        icon: <AlongamentoIcon />,
+        color: '#A5C9D4',
+        bgColor: '#D4E8F0'
+      },
+      'elevacao_calcanhares': {
+        name: 'Elevação de Calcanhares',
+        icon: <ElevacaoCalcanharesIcon />,
+        color: '#D4C5A5',
+        bgColor: '#F0E8D4'
+      },
+      'marcha_estacionaria': {
+        name: 'Marcha Estacionária',
+        icon: <MarchaEstacionariaIcon />,
+        color: '#C9A5D4',
+        bgColor: '#E8D4F0'
+      }
+    };
+    
+    return exerciseConfig[exerciseType] || {
+      name: exerciseType,
+      icon: null,
+      color: '#999',
+      bgColor: '#f0f0f0'
+    };
+  };
+
+  const formatExerciseDescription = (exercise) => {
+    if (exercise.duration_seconds) {
+      return `${exercise.duration_seconds} segundos`;
+    }
+    return `${exercise.repetitions} repetições`;
+  };
+
+  const renderExerciseCard = (title, repetitions, icon, color, bgColor, exerciseType, exercisePlanItem = null) => {
+    // Check completion status from exercise plan item if available, otherwise use old system
+    const isCompleted = exercisePlanItem 
+      ? exercisePlanItem.is_completed 
+      : exerciseSessions.some(session => session.exercise_type === exerciseType);
+    
     const isToday = selectedDate === today;
     const canComplete = isToday && !isCompleted;
     
@@ -444,7 +589,11 @@ export default function HomeScreen() {
           { backgroundColor: bgColor },
           !canComplete && styles.disabledCard
         ]}
-        onPress={() => canComplete && handleExerciseComplete(exerciseType, 10)}
+        onPress={() => canComplete && handleExerciseComplete(
+          exerciseType, 
+          exercisePlanItem ? exercisePlanItem.repetitions : 10,
+          exercisePlanItem ? exercisePlanItem.id : null
+        )}
         disabled={!canComplete}
       >
         <View style={styles.exerciseHeader}>
@@ -552,49 +701,44 @@ export default function HomeScreen() {
 
             {/* Exercise Cards */}
             <View style={styles.exercisesContainer}>
-              {renderExerciseCard(
-                'Sentar e Levantar',
-                '10 repetições',
-                <SittingIcon />,
-                '#8B9A8B',
-                '#B8C5B8',
-                'sitting_standing'
-              )}
-              
-              {renderExerciseCard(
-                'Exercício de Kegel',
-                '10 repetições',
-                <KegelIcon />,
-                '#D4A5A5',
-                '#E8D4D4',
-                'kegel'
-              )}
-              
-              {renderExerciseCard(
-                'Alongamento',
-                '15-30 segundos',
-                <AlongamentoIcon />,
-                '#A5C9D4',
-                '#D4E8F0',
-                'alongamento'
-              )}
-              
-              {renderExerciseCard(
-                'Elevação de Calcanhares',
-                '10-15 repetições',
-                <ElevacaoCalcanharesIcon />,
-                '#D4C5A5',
-                '#F0E8D4',
-                'elevacao_calcanhares'
-              )}
-              
-              {renderExerciseCard(
-                'Marcha Estacionária',
-                '30 segundos - 2 minutos',
-                <MarchaEstacionariaIcon />,
-                '#C9A5D4',
-                '#E8D4F0',
-                'marcha_estacionaria'
+              {isLoadingPlan ? (
+                <Text style={styles.loadingText}>Carregando plano de exercícios...</Text>
+              ) : selectedDateExercises.length > 0 ? (
+                selectedDateExercises.map((exercise, index) => {
+                  const details = getExerciseDetails(exercise.exercise_type);
+                  return (
+                    <View key={exercise.id || `${exercise.exercise_type}-${index}`}>
+                      {renderExerciseCard(
+                        details.name,
+                        formatExerciseDescription(exercise),
+                        details.icon,
+                        details.color,
+                        details.bgColor,
+                        exercise.exercise_type,
+                        exercise
+                      )}
+                    </View>
+                  );
+                })
+              ) : (
+                <View style={styles.noExercisesContainer}>
+                  <Text style={styles.noExercisesText}>
+                    {selectedDate === today 
+                      ? 'Nenhum exercício programado para hoje!' 
+                      : 'Nenhum exercício programado para este dia.'
+                    }
+                  </Text>
+                  {selectedDate === today && (
+                    <TouchableOpacity 
+                      style={styles.generatePlanButton}
+                      onPress={() => fetchExercisePlan()}
+                    >
+                      <Text style={styles.generatePlanButtonText}>
+                        Gerar novo plano
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               )}
             </View>
           </View>
