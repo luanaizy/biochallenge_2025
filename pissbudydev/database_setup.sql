@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 CREATE TABLE IF NOT EXISTS exercise_sessions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  exercise_type TEXT NOT NULL CHECK (exercise_type IN ('kegel', 'sitting_standing')),
+  exercise_type TEXT NOT NULL CHECK (exercise_type IN ('kegel', 'sitting_standing', 'alongamento', 'elevacao_calcanhares', 'marcha_estacionaria')),
   repetitions INTEGER NOT NULL DEFAULT 10,
   completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   date DATE DEFAULT CURRENT_DATE

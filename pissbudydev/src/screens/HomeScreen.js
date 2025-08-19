@@ -187,6 +187,18 @@ const styles = StyleSheet.create({
     width: 114,
     height: 114,
   },
+  alongamentoImage: {
+    width: 100,
+    height: 100,
+  },
+  elevacaoCalcanharesImage: {
+    width: 100,
+    height: 100,
+  },
+  marchaEstacionariaImage: {
+    width: 100,
+    height: 100,
+  },
   completedBadge: {
     position: 'absolute',
     top: 15,
@@ -239,6 +251,30 @@ const KegelIcon = () => (
   <Image 
     source={require('../../assets/kegel.png')} 
     style={styles.kegelImage}
+    resizeMode="contain"
+  />
+);
+
+const AlongamentoIcon = () => (
+  <Image 
+    source={require('../../assets/alongamento.png')} 
+    style={styles.alongamentoImage}
+    resizeMode="contain"
+  />
+);
+
+const ElevacaoCalcanharesIcon = () => (
+  <Image 
+    source={require('../../assets/elevacao_calcanhares.png')} 
+    style={styles.elevacaoCalcanharesImage}
+    resizeMode="contain"
+  />
+);
+
+const MarchaEstacionariaIcon = () => (
+  <Image 
+    source={require('../../assets/marcha_estacionaria.png')} 
+    style={styles.marchaEstacionariaImage}
     resizeMode="contain"
   />
 );
@@ -532,6 +568,33 @@ export default function HomeScreen() {
                 '#D4A5A5',
                 '#E8D4D4',
                 'kegel'
+              )}
+              
+              {renderExerciseCard(
+                'Alongamento',
+                '15-30 segundos',
+                <AlongamentoIcon />,
+                '#A5C9D4',
+                '#D4E8F0',
+                'alongamento'
+              )}
+              
+              {renderExerciseCard(
+                'Elevação de Calcanhares',
+                '10-15 repetições',
+                <ElevacaoCalcanharesIcon />,
+                '#D4C5A5',
+                '#F0E8D4',
+                'elevacao_calcanhares'
+              )}
+              
+              {renderExerciseCard(
+                'Marcha Estacionária',
+                '30 segundos - 2 minutos',
+                <MarchaEstacionariaIcon />,
+                '#C9A5D4',
+                '#E8D4F0',
+                'marcha_estacionaria'
               )}
             </View>
           </View>
