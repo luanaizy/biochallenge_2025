@@ -14,6 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthContext } from '../context/AuthContext';
 import { supabase } from '../config/supabase';
+import ExerciseInstructionsModal from '../components/ExerciseInstructionsModal';
+import { exerciseData } from '../data/exerciseData';
 
 // Define styles first so they can be used by icon components
 const styles = StyleSheet.create({
@@ -144,6 +146,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 8,
+    zIndex: 10,
+    position: 'relative',
   },
   exerciseTitle: {
     fontSize: 18,
@@ -158,6 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
   },
   infoIcon: {
     fontSize: 12,
@@ -241,6 +246,8 @@ const KegelIcon = () => (
 export default function HomeScreen() {
   const [userProfile, setUserProfile] = useState(null);
   const [exerciseSessions, setExerciseSessions] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedExercise, setSelectedExercise] = useState(null);
   const { user } = useAuthContext();
   
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
@@ -377,6 +384,18 @@ export default function HomeScreen() {
     }
   };
 
+  const handleShowInstructions = (exerciseType) => {
+    console.log('Exercise type clicked:', exerciseType);
+    const exercise = exerciseData[exerciseType];
+    console.log('Exercise data found:', exercise);
+    if (exercise) {
+      setSelectedExercise(exercise);
+      setModalVisible(true);
+    } else {
+      Alert.alert('Debug', `Exercise type "${exerciseType}" not found in data`);
+    }
+  };
+
   const renderExerciseCard = (title, repetitions, icon, color, bgColor, exerciseType) => {
     const isCompleted = exerciseSessions.some(session => session.exercise_type === exerciseType);
     const isToday = selectedDate === today;
@@ -394,7 +413,12 @@ export default function HomeScreen() {
       >
         <View style={styles.exerciseHeader}>
           <Text style={styles.exerciseTitle}>{title}</Text>
-          <TouchableOpacity style={styles.infoButton}>
+          <TouchableOpacity 
+            style={styles.infoButton}
+            onPress={() => handleShowInstructions(exerciseType)}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Text style={styles.infoIcon}>?</Text>
           </TouchableOpacity>
         </View>
@@ -513,6 +537,12 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+      
+      <ExerciseInstructionsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        exercise={selectedExercise}
+      />
     </SafeAreaView>
   );
 }
