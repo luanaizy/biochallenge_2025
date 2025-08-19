@@ -367,6 +367,24 @@ export default function HomeScreen() {
     }
   };
 
+  // Handle date selection without triggering database fetch
+  const handleDateSelection = (date) => {
+    setSelectedDate(date);
+    
+    // Update exercises for the new selected date if we already have the plan
+    if (exercisePlan) {
+      const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth();
+      const selectedDateObj = new Date(currentYear, currentMonth, date);
+      const dayOfWeek = selectedDateObj.getDay();
+      const exercisesForDate = exercisePlanService.getExercisesForDay(exercisePlan, dayOfWeek);
+      setSelectedDateExercises(exercisesForDate);
+    }
+    
+    // Only fetch exercise sessions for the new date if needed
+    fetchExerciseSessions();
+  };
+
   useEffect(() => {
     updateSelectedDateExercises();
   }, [selectedDate, exercisePlan]);
@@ -377,7 +395,7 @@ export default function HomeScreen() {
       fetchExerciseSessions();
       fetchExercisePlan();
     }
-  }, [user, selectedDate]);
+  }, [user]); // Remove selectedDate dependency
 
   const fetchUserProfile = async () => {
     try {
@@ -477,8 +495,22 @@ export default function HomeScreen() {
         // Use the new exercise plan system
         await exercisePlanService.completeExercise(exercisePlanItemId);
         
-        // Refresh the exercise plan to update completion status
-        await fetchExercisePlan();
+        // Update local state instead of refetching from database
+        setTodaysExercises(prevExercises => 
+          prevExercises.map(exercise => 
+            exercise.id === exercisePlanItemId 
+              ? { ...exercise, is_completed: true, completed_at: new Date().toISOString() }
+              : exercise
+          )
+        );
+        
+        setSelectedDateExercises(prevExercises => 
+          prevExercises.map(exercise => 
+            exercise.id === exercisePlanItemId 
+              ? { ...exercise, is_completed: true, completed_at: new Date().toISOString() }
+              : exercise
+          )
+        );
         
         Alert.alert('Sucesso!', `Exercício concluído!`);
       } else {
@@ -503,7 +535,14 @@ export default function HomeScreen() {
           console.error('Error saving exercise:', error);
         } else {
           Alert.alert('Sucesso!', `Exercício de ${exerciseType} concluído!`);
-          fetchExerciseSessions(); // Refresh the sessions
+          // Update local sessions state instead of refetching
+          const newSession = {
+            user_id: user.id,
+            exercise_type: exerciseType,
+            repetitions: repetitions,
+            date: todayDateString,
+          };
+          setExerciseSessions(prevSessions => [...prevSessions, newSession]);
         }
       }
     } catch (error) {
@@ -679,7 +718,7 @@ export default function HomeScreen() {
                         isSelected && styles.selectedDateButton,
                         isToday && !isSelected && styles.todayDateButton
                       ]}
-                      onPress={() => setSelectedDate(date)}
+                      onPress={() => handleDateSelection(date)}
                     >
                       <Text style={[
                         styles.dateText,
