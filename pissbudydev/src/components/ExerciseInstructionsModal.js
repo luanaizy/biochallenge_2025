@@ -13,6 +13,30 @@ import { WebView } from 'react-native-webview';
 
 const { width, height } = Dimensions.get('window');
 
+function parseBoldText(text) {
+  const regex = /\*(.*?)\*/g; // Captura o conteúdo entre asteriscos
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const before = text.substring(lastIndex, match.index);
+    const boldText = match[1];
+
+    if (before) parts.push({ text: before, bold: false });
+    parts.push({ text: boldText, bold: true });
+
+    lastIndex = regex.lastIndex;
+  }
+
+  // Adiciona o restante do texto após o último asterisco
+  if (lastIndex < text.length) {
+    parts.push({ text: text.substring(lastIndex), bold: false });
+  }
+
+  return parts;
+}
+
 const ExerciseInstructionsModal = ({ visible, onClose, exercise }) => {
   if (!exercise) return null;
 
@@ -65,7 +89,12 @@ const ExerciseInstructionsModal = ({ visible, onClose, exercise }) => {
           {/* Instructions Section */}
           <View style={styles.instructionsContainer}>
             <Text style={styles.sectionTitle}>Instruções Detalhadas</Text>
-            <Text style={styles.instructionsText}>{exercise.instructions}</Text>
+            <Text style={styles.instructionsText}>
+              {parseBoldText(exercise.instructions).map((part, index) => (
+              <Text key={index} style={part.bold ? { fontWeight: 'bold' } : null}>
+                {part.text}
+            </Text>
+            ))}</Text>
           </View>
 
           {/* Tips Section */}
