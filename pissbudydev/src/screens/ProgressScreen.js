@@ -158,7 +158,7 @@ export default function ProgressScreen() {
         .from('progress_tracking')
         .select('*')
         .eq('user_id', user.id)
-        .eq('metric_type', 'iciq_sf')
+        .eq('metric_type', 'iciq_sf_v2')
         .order('week_number');
 
       console.log('ICIQ-SF data:', isqfData, 'Error:', isqfError);
