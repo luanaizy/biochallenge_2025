@@ -28,7 +28,9 @@
     "react-native-svg": "15.11.2",
     "react-native-webview": "13.13.5",
     "react-native-gesture-handler": "~2.24.0",
-    "expo-build-properties": "~0.14.8"
+    "expo-build-properties": "~0.14.8",
+    "expo-notifications": "~0.31.4",
+    "expo-device": "~7.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

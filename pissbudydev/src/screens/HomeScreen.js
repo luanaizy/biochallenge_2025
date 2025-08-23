@@ -17,6 +17,8 @@ import { supabase } from '../config/supabase';
 import ExerciseInstructionsModal from '../components/ExerciseInstructionsModal';
 import { exerciseData } from '../data/exerciseData';
 import { exercisePlanService } from '../services/exercisePlanService';
+import { useNotifications } from '../hooks/useNotifications';
+import { useNavigation } from '@react-navigation/native';
 
 // Define styles first so they can be used by icon components
 const styles = StyleSheet.create({
@@ -318,6 +320,15 @@ export default function HomeScreen() {
   const [selectedDateExercises, setSelectedDateExercises] = useState([]);
   const [isLoadingPlan, setIsLoadingPlan] = useState(true);
   const { user } = useAuthContext();
+  const navigation = useNavigation();
+  
+  // Initialize notifications
+  const { 
+    permissionGranted, 
+    handleExerciseCompletion, 
+    scheduleReminders,
+    sendImmediateNotification 
+  } = useNotifications(navigation);
   
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
   
@@ -396,6 +407,13 @@ export default function HomeScreen() {
       fetchExercisePlan();
     }
   }, [user]); // Remove selectedDate dependency
+
+  // Schedule notifications when exercise plan is loaded
+  useEffect(() => {
+    if (user && exercisePlan && permissionGranted) {
+      scheduleReminders(user.id);
+    }
+  }, [user, exercisePlan, permissionGranted]);
 
   const fetchUserProfile = async () => {
     try {
@@ -512,6 +530,19 @@ export default function HomeScreen() {
           )
         );
         
+        // Check if all exercises are completed and handle notifications
+        const updatedExercises = todaysExercises.map(exercise => 
+          exercise.id === exercisePlanItemId 
+            ? { ...exercise, is_completed: true, completed_at: new Date().toISOString() }
+            : exercise
+        );
+        
+        const completedCount = updatedExercises.filter(ex => ex.is_completed).length;
+        const totalCount = updatedExercises.length;
+        
+        // Handle notification logic
+        await handleExerciseCompletion(completedCount, totalCount);
+        
         Alert.alert('Sucesso!', `Exercício concluído!`);
       } else {
         // Fallback to old system for backward compatibility
@@ -543,6 +574,13 @@ export default function HomeScreen() {
             date: todayDateString,
           };
           setExerciseSessions(prevSessions => [...prevSessions, newSession]);
+          
+          // Handle notification logic for fallback system
+          if (todaysExercises.length > 0) {
+            const completedCount = exerciseSessions.length + 1; // +1 for the just completed exercise
+            const totalCount = todaysExercises.length;
+            await handleExerciseCompletion(completedCount, totalCount);
+          }
         }
       }
     } catch (error) {

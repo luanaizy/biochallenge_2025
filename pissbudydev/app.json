@@ -37,6 +37,14 @@
     "plugins": [
       "expo-av",
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#8B9A8B",
+          "defaultChannel": "default"
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
