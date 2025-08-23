@@ -50,9 +50,9 @@ export default function ISQFQuestionnaireScreen({ navigation }) {
   ];
 
   const question7Options = [
-    { label: 'Quando tusso ou espirro', key: 'espirro', image_path: '../../assets/cough.png'},
-    { label: 'Quando faço atividade física', key: 'atividade', image_path: '../../assets/fitness.png'},
-    { label: 'Quando termino de urinar e me visto', key: 'termino', image_path: '../../assets/clothes.png'},
+    { label: 'Quando tusso ou espirro', key: 'espirro', image_path: require('../../assets/cough.png')},
+    { label: 'Quando faço atividade física', key: 'atividade', image_path: require('../../assets/fitness.png')},
+    { label: 'Quando termino de urinar e me visto', key: 'termino', image_path: require('../../assets/clothes.png')},
   ];
 
   const frequencyOptions = [
@@ -221,7 +221,7 @@ export default function ISQFQuestionnaireScreen({ navigation }) {
                   }}
                 >
                   <Image
-                    source={require(opt.image_path)} 
+                    source={opt.image_path} 
                     style={{ width: 40, height: 40, marginBottom: 5 }}
                   />
                   <Text style={styles.buttonOptionText}>{opt.label}</Text>
